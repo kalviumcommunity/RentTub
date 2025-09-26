@@ -1,0 +1,27 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #222;
+  color: #fff;
+  padding: 1rem 2rem;
+}
+.navbar h1 {
+  margin: 0;
+}
+.navbar a {
+  color: #fff;
+  text-decoration: none;
+  margin-right: 1rem;
+}
+.login-btn {
+  background: #007bff;
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.login-btn:hover {
+  background: #0056b3;
+}
