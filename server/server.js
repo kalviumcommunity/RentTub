@@ -5,6 +5,9 @@ const cors = require("cors");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
+const app = express();
+app.use(cors());
+app.use(express.json());
 // JWT Middleware
 function authenticateToken(req, res, next) {
   const authHeader = req.headers['authorization'];
@@ -17,6 +20,13 @@ function authenticateToken(req, res, next) {
   });
 }
 
+// User Schema and Model
+const userSchema = new mongoose.Schema({
+  username: { type: String, required: true },
+  email: { type: String, required: true },
+  password: { type: String, required: true }
+});
+const User = mongoose.model('User', userSchema);
 // User Login (returns JWT)
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
@@ -35,22 +45,12 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-const app = express();
-app.use(cors());
-app.use(express.json());
 
 // Example route
 app.get("/", (req, res) => {
   res.send("Backend is running!");
 });
 
-// User Schema and Model
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true },
-  email: { type: String, required: true },
-  password: { type: String, required: true }
-});
-const User = mongoose.model('User', userSchema);
 
 // Get all users (protected)
 app.get('/api/users', authenticateToken, async (req, res) => {
@@ -75,7 +75,7 @@ app.post('/api/users', async (req, res) => {
 });
 
 // Edit user (protected)
-app.put('/api/users/:id', authenticateToken, async (req, res) => {
+app.put('/api/users/:id',  async (req, res) => {
   try {
     const { id } = req.params;
     const { username, email, password } = req.body;
@@ -88,7 +88,7 @@ app.put('/api/users/:id', authenticateToken, async (req, res) => {
 });
 
 // Delete user (protected)
-app.delete('/api/users/:id', authenticateToken, async (req, res) => {
+app.delete('/api/users/:id',  async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findByIdAndDelete(id);
@@ -114,6 +114,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     console.log('Starting server initialization...');
+    console.log(PORT);
     await connectDB();
     console.log('MongoDB connected successfully');
     
