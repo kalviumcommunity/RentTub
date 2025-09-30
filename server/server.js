@@ -1,7 +1,39 @@
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const JWT_SECRET = process.env.JWT_SECRET || "your_jwt_secret";
+// JWT Middleware
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token provided' });
+  jwt.verify(token, JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ error: 'Invalid token' });
+    req.user = user;
+    next();
+  });
+}
+
+// User Login (returns JWT)
+app.post('/api/login', async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const user = await User.findOne({ email, password });
+    if (!user) return res.status(401).json({ error: "Invalid credentials" });
+    // Generate JWT
+    const token = jwt.sign(
+      { id: user._id, username: user.username, email: user.email },
+      JWT_SECRET,
+      { expiresIn: "1h" }
+    );
+    res.json({ token, user: { id: user._id, username: user.username, email: user.email } });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 const app = express();
 app.use(cors());
@@ -20,8 +52,8 @@ const userSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', userSchema);
 
-// Get all users
-app.get('/api/users', async (req, res) => {
+// Get all users (protected)
+app.get('/api/users', authenticateToken, async (req, res) => {
   try {
     const users = await User.find();
     res.json(users);
@@ -42,8 +74,8 @@ app.post('/api/users', async (req, res) => {
   }
 });
 
-// Edit user
-app.put('/api/users/:id', async (req, res) => {
+// Edit user (protected)
+app.put('/api/users/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const { username, email, password } = req.body;
@@ -55,8 +87,8 @@ app.put('/api/users/:id', async (req, res) => {
   }
 });
 
-// Delete user
-app.delete('/api/users/:id', async (req, res) => {
+// Delete user (protected)
+app.delete('/api/users/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
     const user = await User.findByIdAndDelete(id);
